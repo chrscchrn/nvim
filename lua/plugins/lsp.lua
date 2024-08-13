@@ -10,8 +10,12 @@ return {
         'hrsh7th/cmp-path',
         'hrsh7th/cmp-cmdline',
         'hrsh7th/cmp-buffer',
+        -- not sure if working
+        'Hoffs/omnisharp-extended-lsp.nvim',
         'L3MON4D3/LuaSnip',
         'saadparwaiz1/cmp_luasnip',
+        -- not implemented
+        'Issafalcon/lsp-overloads.nvim',
     },
 
     config = function()
@@ -94,13 +98,25 @@ return {
                     }
                 end,
                 ["omnisharp"] = function()
+                    local omni_ext = require("omnisharp_extended")
+                    vim.keymap.set("n", "gd", function()
+                        omni_ext.lsp_definition()
+                    end)
+
+                    vim.keymap.set("n", "gtd", function()
+                        omni_ext.lsp_references()
+                    end)
+
+                    vim.keymap.set("n", "gi", function()
+                        omni_ext.lsp_implementation()
+                    end)
                     require("lspconfig").omnisharp.setup {
                         capabilities = capabilities,
                         cmd = { "dotnet", "/home/chrscchrn/.local/share/nvim/mason/packages/omnisharp/libexec/OmniSharp.dll" },
 
                         settings = {
                             FormattingOptions = {
-                                EnableEditorConfigSupport = true,
+                                EnableEditorConfigSupport = nil,
                                 OrganizeImports = true,
                             },
                             MsBuild = {
@@ -108,16 +124,10 @@ return {
                             },
                             RoslynExtensionsOptions = {
                                 EnableAnalyzersSupport = true,
-                                -- Enables support for showing unimported types and unimported extension
-                                -- methods in completion lists. When committed, the appropriate using
-                                -- directive will be added at the top of the current file. This option can
-                                -- have a negative impact on initial completion responsiveness,
-                                -- particularly for the first few completion sessions after opening a
-                                -- solution.
-                                EnableImportCompletion = true,
-                                -- Only run analyzers against open files when 'enableRoslynAnalyzers' is
-                                -- true
+                                -- it's slow
+                                EnableImportCompletion = nil,
                                 AnalyzeOpenDocumentsOnly = nil,
+                                enableDecompilationSupport = true,
                             },
                             Sdk = {
                                 -- Specifies whether to include preview versions of the .NET SDK when
