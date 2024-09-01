@@ -4,18 +4,15 @@ return {
         "williamboman/mason.nvim",
         "williamboman/mason-lspconfig.nvim",
         "j-hui/fidget.nvim",
-        -- the shit i dont know
+        'Issafalcon/lsp-overloads.nvim',
+        'Hoffs/omnisharp-extended-lsp.nvim',
+        'L3MON4D3/LuaSnip',
         'hrsh7th/nvim-cmp',
         'hrsh7th/cmp-nvim-lsp',
         'hrsh7th/cmp-path',
         'hrsh7th/cmp-cmdline',
         'hrsh7th/cmp-buffer',
-        -- not sure if working
-        'Hoffs/omnisharp-extended-lsp.nvim',
-        'L3MON4D3/LuaSnip',
         'saadparwaiz1/cmp_luasnip',
-        -- not implemented
-        'Issafalcon/lsp-overloads.nvim',
     },
 
     config = function()
@@ -66,10 +63,7 @@ return {
         })
 
 
-
-
         local capabilities = require('cmp_nvim_lsp').default_capabilities()
-
         require("fidget").setup({})
         require("mason").setup()
         require("mason-lspconfig").setup({
@@ -81,11 +75,21 @@ return {
                 function(server_name) -- default handler (optional)
                     require("lspconfig")[server_name].setup {
                         capabilities = capabilities,
+                        on_attach = function(client)
+                            if client.server_capabilities.signatureHelpProvider then
+                                require('lsp-overloads').setup(client, { })
+                            end
+                        end,
                     }
                 end,
                 ["lua_ls"] = function()
                     local lspconfig = require("lspconfig")
                     lspconfig.lua_ls.setup {
+                        on_attach = function(client)
+                            if client.server_capabilities.signatureHelpProvider then
+                                require('lsp-overloads').setup(client, { })
+                            end
+                        end,
                         capabilities = capabilities,
                         settings = {
                             Lua = {
@@ -102,18 +106,23 @@ return {
                     vim.keymap.set("n", "gd", function()
                         omni_ext.lsp_definition()
                     end)
-
                     vim.keymap.set("n", "gtd", function()
                         omni_ext.lsp_references()
                     end)
-
                     vim.keymap.set("n", "gi", function()
                         omni_ext.lsp_implementation()
                     end)
-                    require("lspconfig").omnisharp.setup {
-                        capabilities = capabilities,
-                        cmd = { "dotnet", "/home/chrscchrn/.local/share/nvim/mason/packages/omnisharp/libexec/OmniSharp.dll" },
 
+                    -- vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action(), {})
+                    local home_dir = os.getenv("HOME")
+                    require("lspconfig").omnisharp.setup {
+                        on_attach = function(client)
+                            if client.server_capabilities.signatureHelpProvider then
+                                require('lsp-overloads').setup(client, { })
+                            end
+                        end,
+                        capabilities = capabilities,
+                        cmd = { "dotnet", home_dir .. "/.local/share/nvim/mason/packages/omnisharp/libexec/OmniSharp.dll" },
                         settings = {
                             FormattingOptions = {
                                 EnableEditorConfigSupport = nil,
